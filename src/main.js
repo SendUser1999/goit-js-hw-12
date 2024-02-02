@@ -18,12 +18,12 @@ formSearch.addEventListener('submit', handleSearch);
 
 async function handleSearch(event) {
     event.preventDefault();
-    const searchQuery = event.currentTarget.elements.input.value;
+    const searchQuery = event.currentTarget?.elements?.input?.value;
 
     imageList.innerHTML = '';
     loader.classList.remove('is-hidden');
 
-    if (!searchQuery.trim()) {
+    if (!searchQuery || !searchQuery.trim()) {
         showNotification({
             title: '❕',
             theme: 'light',
@@ -58,9 +58,11 @@ async function handleSearch(event) {
     } catch (error) {
         handleError(error);
     } finally {
-        loader.classList.add('is-hidden');
+    if (event.currentTarget) {
+      event.currentTarget.reset();
     }
-    event.currentTarget.reset();
+    loader.classList.add('is-hidden');
+  }
 }
 async function fetchImages(value) {
     const BASE_URL = 'https://pixabay.com/api/';
