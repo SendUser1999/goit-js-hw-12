@@ -118,8 +118,26 @@ img {
   font-weight: 500;
   cursor: pointer;
 }
-
 .search-btn:hover {
+  background-color: #6c8cff;
+}
+.load-more-btn {
+  display: block;
+  padding: 10px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  background: #4e75ff;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+.load-more-btn:hover {
   background-color: #6c8cff;
 }
 
@@ -147,9 +165,9 @@ img {
 }
 
 .loader {
-  color: #4e75ff;
+  color: #2E2F42;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: normal;
   text-align: center;
 }
 
@@ -157,4 +175,11 @@ img {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+.end-message {
+    color: #2E2F42;
+    font-size: 24px;
+    font-weight: normal;
+    text-align: center;
 }
