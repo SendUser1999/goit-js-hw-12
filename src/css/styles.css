@@ -122,7 +122,7 @@ img {
   background-color: #6c8cff;
 }
 .load-more-btn {
-  display: block;
+  display: none;
   padding: 10px 16px;
   justify-content: center;
   align-items: center;
