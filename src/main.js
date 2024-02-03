@@ -4,7 +4,6 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import axios from 'axios';
 
-const icon = 'path/to/icon.png';
 
 const formSearch = document.querySelector('.form');
 const imageList = document.querySelector('.gallery');
@@ -21,12 +20,15 @@ let currentPage = 1;
 formSearch.addEventListener('submit', handleSearch);
 loadMoreBtn.addEventListener('click', handleLoadMore);
 
+let endMessageExists = false;
+
 function handleSearch(event) {
   event.preventDefault();
   const searchQuery = event.currentTarget.elements.input.value;
 
   imageList.innerHTML = '';
-  currentPage = 1;
+    currentPage = 1;
+    hideEndMessage();
 
     if (!searchQuery.trim()) {
     showNotification({
@@ -50,26 +52,32 @@ async function fetchAndRenderImages(value) {
         const data = await fetchImages(value, currentPage);
         
         if (data.hits.length === 0) {
-        showNotification({
-        iconUrl: icon,
-        theme: 'dark',
-        message: 'Sorry, there are no images matching your search query. Please try again!',
-        messageSize: '16px',
-        messageColor: 'white',
-        backgroundColor: '#EF4040',
-        position: 'topRight',
-        timeout: 5000,
-        });
-    } else {
-      imageList.innerHTML += createMarkup(data.hits);
-      gallery.refresh();
-      showLoadMoreBtn();
-      hideEndMessage();
-      smoothScrollToNextGroup();
+            showNotification({
+                title: '❕',
+                theme: 'dark',
+                message: 'Sorry, there are no images matching your search query. Please try again!',
+                messageSize: '16px',
+                messageColor: 'white',
+                backgroundColor: '#EF4040',
+                position: 'topRight',
+                timeout: 5000,
+            });
+        } else {
+            imageList.innerHTML += createMarkup(data.hits);
+            gallery.refresh();
+            showLoadMoreBtn();
+            hideEndMessage();
+            smoothScrollToNextGroup();
+      
+      if (data.hits.length < data.totalHits) {
+        updateLoadMoreButtonState(data.totalHits, data.hits);
+      } else {
+        hideLoadMoreBtn();
+        showEndMessage();
+        endMessageExists = true;
+      }
     }
 
-        updateLoadMoreButtonState(data.totalHits, data.hits);
-        
   } catch (error) {
     handleError(error);
   } finally {
@@ -77,12 +85,15 @@ async function fetchAndRenderImages(value) {
   }
 }
 
-function updateLoadMoreButtonState(totalHits, hits) {
+function updateLoadMoreButtonState(totalHits) {
   const remainingHits = totalHits - currentPage * 15;
 
-  if (remainingHits <= 0 && hits.length === 0) {
-    hideLoadMoreBtn();
-    showEndMessage();
+  if (remainingHits <= 0) {
+      hideLoadMoreBtn();
+      if (!endMessageExists) {
+          showEndMessage(); 
+          endMessageExists = true;
+      }
   }
 }
 
@@ -135,11 +146,11 @@ function showNotification(options) {
   iziToast.show(options);
 }
 
-function handleError(err, data) {
+function handleError(err) {
     console.error(err);
     imageList.innerHTML = '';
     showNotification({
-        iconUrl: icon,
+        title: '❕',
         theme: 'dark',
         message: 'Sorry, there is a problem with the connection to the server.',
         messageSize: '16px',
@@ -154,12 +165,13 @@ function handleLoadMore() {
   currentPage += 1;
   const searchQuery = formSearch.elements.input.value;
   loader.classList.remove('is-hidden');
-  hideLoadMoreBtn();
-  fetchAndRenderImages(searchQuery);
+    hideLoadMoreBtn();
+    hideEndMessage();
+    fetchAndRenderImages(searchQuery);
 }
 
 function showLoadMoreBtn() {
-  loadMoreBtn.classList.remove('is-hidden');
+    loadMoreBtn.classList.remove('is-hidden');
 }
 
 function hideLoadMoreBtn() {
@@ -169,8 +181,7 @@ function hideLoadMoreBtn() {
 function showEndMessage() {
   const endMessage = document.createElement('div');
   endMessage.classList.add('end-message');
-  endMessage.textContent = "We're sorry, but you've reached the end of search results.";
-
+    endMessage.textContent = "We're sorry, but you've reached the end of search results.";
     document.body.appendChild(endMessage);
 }
 
@@ -189,6 +200,7 @@ function smoothScrollToNextGroup() {
     behavior: 'smooth',
   });
 }
+
 
 
 
