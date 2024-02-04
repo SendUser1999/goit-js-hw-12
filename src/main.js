@@ -14,12 +14,12 @@ const gallery = new SimpleLightbox('.gallery a', {
 });
 
 let page = 1;
-let currentSearchQuery = ''; // Додайте глобальну змінну для зберігання поточного тегу
+let currentSearchQuery = '';
 
 formSearch.addEventListener('submit', handleSearch);
 loadMoreBtn.addEventListener('click', loadMoreImages);
 
-function handleSearch(event) {
+async function handleSearch(event) {
     event.preventDefault();
     const searchQuery = event.currentTarget.elements.input.value;
 
@@ -35,29 +35,38 @@ function handleSearch(event) {
             timeout: 3000,
         });
         loader.classList.add('is-hidden');
+        hideLoadMoreButton();
         return;
     }
 
-    fetchImages(searchQuery)
-        .then(data => {
-            if (data.hits.length === 0) {
-                iziToast.error({
-                    message: 'Sorry, there are no images matching your search query. Please try again!',
-                    position: 'topRight',
-                    timeout: 5000,
-                });
-            }
+    let data;
+    try {
+        data = await fetchImages(searchQuery);
+
+        if (data.hits.length === 0) {
+            iziToast.error({
+                message: 'Sorry, there are no images matching your search query. Please try again!',
+                position: 'topRight',
+                timeout: 5000,
+            });
+        } else {
             imageList.innerHTML = createMarkup(data.hits);
             gallery.refresh();
-            showLoadMoreButton(data.hits.length, data.totalHits);
-        })
-        .catch(handleError)
-        .finally(() => {
-            loader.classList.add('is-hidden');
+            showLoadMoreButton(15, data);
+        }
+    } catch (error) {
+        handleError(error);
+    } finally {
+        loader.classList.add('is-hidden');
+        if (data) {
             showLoadMoreButton(15, data.totalHits);
-        });
-  event.currentTarget.reset();
+        }
+    }
+    if (formSearch) {
+        formSearch.reset();
+    }
 }
+
 
 function fetchImages(value) {
   const BASE_URL = 'https://pixabay.com/api/';
@@ -111,7 +120,8 @@ function handleError(err) {
 
 function loadMoreImages() {
     page++;
-    loader.classList.remove('is-hidden'); 
+    loader.classList.remove('is-hidden');
+    hideLoadMoreButton();
   const galleryItemHeight = document.querySelector('.gallery-item').getBoundingClientRect().height;
   fetchImages(currentSearchQuery) 
     .then(data => {
@@ -133,6 +143,10 @@ function loadMoreImages() {
     });
 }
 
+function hideLoadMoreButton() {
+    loadMoreBtn.style.display = 'none';
+}
+
 function showLoadMoreButton(imagesCount, totalHits) {
   if (imagesCount >= 15 && totalHits && page * 15 < totalHits) {
     loadMoreBtn.style.display = 'block';
@@ -147,7 +161,7 @@ function showLoadMoreButton(imagesCount, totalHits) {
 function showEndOfResultsMessage() {
   iziToast.info({
     message: "We're sorry, but you've reached the end of search results.",
-    position: 'bottomCenter',
+    position: 'topRight',
     timeout: 5000,
   });
 }
